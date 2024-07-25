@@ -27,6 +27,7 @@ void UExtendedCharacterMovementComponent::SetCrouching(bool Val) {
   bWantsToCrouch = Val;
 
   if (Val) {
+    Crouch(); // Must call this to move character down to the floor at this frame
     SetSprinting(false);
   }
 }
