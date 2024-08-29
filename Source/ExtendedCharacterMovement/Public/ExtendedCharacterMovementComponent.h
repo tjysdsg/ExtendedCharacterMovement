@@ -13,6 +13,12 @@ enum ECustomMovementMode : uint8 {
   CMOVE_WallRunning UMETA(DisplayName = "WallRunning"),
   CMOVE_Sliding UMETA(DisplayName = "Sliding"),
   CMOVE_MAX UMETA(Hidden),
+
+  // These are not actually used as custom movement mode
+  // Instead, they only serve as identification of the movement status for external users
+  // See BroadcastOnMovementModeChanged
+  CMOVE_Sprinting UMETA(DisplayName = "Sprinting"),
+  CMOVE_Crouching UMETA(DisplayName = "Crouching"),
 };
 
 
@@ -54,7 +60,6 @@ class EXTENDEDCHARACTERMOVEMENT_API UExtendedCharacterMovementComponent : public
 
 public:
   FMovementModeDelegate OnMovementModeChangedCallbacks;
-  FOnSprintChangedDelegate OnSprintStatusChangedCallbacks;
 
 #pragma region Sprint
 
@@ -169,7 +174,7 @@ public:
 
 #pragma endregion
 
-#pragma region APIs
+#pragma region Sprint/Crouching
 
 public:
   UFUNCTION(BlueprintCallable)
@@ -187,9 +192,6 @@ public:
   UFUNCTION(BlueprintCallable)
   void ToggleCrouching();
 
-  // Returns true if the movement mode is custom and matches the provided custom movement mode
-  bool IsCustomMovementMode(uint8 CustomMovementMode) const;
-
 #pragma endregion
 
 #pragma region WallRunning
@@ -205,6 +207,9 @@ public:
 
   EWallRunSide CalculateWallRunSide(const FVector &SurfaceNormal) const;
   FVector CalculateWallRunDirection(const FVector &SurfaceNormal, EWallRunSide Side) const;
+
+  /// Find if a wall is nearby
+  bool FindNearbyWallFirstPass(EWallRunSide Side, FHitResult &Hit) const;
 
   bool FindNearbyWall(FWallRunInfo &WallRunInfo) const;
   bool FindNearbyWall(EWallRunSide Side, FWallRunInfo &WallRunInfo) const;
@@ -252,10 +257,12 @@ public:
 
 #pragma endregion
 
+  // Returns true if the movement mode is custom and matches the provided custom movement mode
+  bool IsCustomMovementMode(uint8 CustomMovementMode) const;
+
   void VisualWallRunInfo() const;
 
-  /// Find if a wall is nearby
-  bool FindNearbyWallFirstPass(EWallRunSide Side, FHitResult &Hit) const;
+  void BroadcastOnMovementModeChanged();
 
 private:
   // Wants to sprint but maybe we cannot
@@ -265,9 +272,15 @@ private:
   // If sprinting last frame
   bool bWasSprinting : 1 = false;
 
+  // If crouching last frame
+  bool bWasCrouching : 1 = false;
+
   bool bIsWallRunJumpingAway : 1 = false;
   FWallRunInfo CurrentWallRunInfo{};
 
   UPROPERTY()
   UCapsuleComponent *CapsuleComponent = nullptr;
+
+  UPROPERTY(Transient)
+  FVector CharacterMeshOffsetBeforeCrouch = FVector::Zero();
 };

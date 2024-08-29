@@ -626,11 +626,12 @@ void UExtendedCharacterMovementComponent::TickComponent(
     bIsSprinting = false;
   }
 
-  // sprint status changed
-  if (bWasSprinting != bIsSprinting) {
-    OnSprintStatusChangedCallbacks.Broadcast(bIsSprinting);
+  // sprint/crouch status changed
+  if (bWasSprinting != bIsSprinting || bWasCrouching != IsCrouching()) {
+    BroadcastOnMovementModeChanged();
   }
   bWasSprinting = bIsSprinting;
+  bWasCrouching = IsCrouching();
 
   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
@@ -651,7 +652,24 @@ void UExtendedCharacterMovementComponent::OnMovementModeChanged(
     bIsWallRunJumpingAway = false;
   }
 
-  OnMovementModeChangedCallbacks.Broadcast(MovementMode, static_cast<ECustomMovementMode>(CustomMovementMode));
+  BroadcastOnMovementModeChanged();
+}
+
+void UExtendedCharacterMovementComponent::BroadcastOnMovementModeChanged() {
+  auto CustomMode = static_cast<ECustomMovementMode>(CustomMovementMode);
+
+  // override custom mode if we're sprinting or crouching
+  if (IsWalking()) {
+    if (IsSprinting()) {
+      CustomMode = CMOVE_Sprinting;
+    } else if (IsCrouching()) {
+      CustomMode = CMOVE_Crouching;
+    } else {
+      CustomMode = CMOVE_None;
+    }
+  }
+
+  OnMovementModeChangedCallbacks.Broadcast(MovementMode, CustomMode);
 }
 
 void UExtendedCharacterMovementComponent::UpdateCharacterStateBeforeMovement(float DeltaSeconds) {
