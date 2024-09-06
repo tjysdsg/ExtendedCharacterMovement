@@ -280,7 +280,4 @@ private:
 
   UPROPERTY()
   UCapsuleComponent *CapsuleComponent = nullptr;
-
-  UPROPERTY(Transient)
-  FVector CharacterMeshOffsetBeforeCrouch = FVector::Zero();
 };
