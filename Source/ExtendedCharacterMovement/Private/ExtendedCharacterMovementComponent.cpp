@@ -464,8 +464,7 @@ void UExtendedCharacterMovementComponent::PhysSliding(float deltaTime, int32 Ite
     const bool bCheckLedges = !CanWalkOffLedges();
     if (bCheckLedges && !CurrentFloor.IsWalkableFloor()) {
       // calculate possible alternate movement
-      const FVector GravDir = GetGravityDirection();
-      const FVector NewDelta = bTriedLedgeMove ? FVector::ZeroVector : GetLedgeMove(OldLocation, Delta, GravDir);
+      const FVector NewDelta = bTriedLedgeMove ? FVector::ZeroVector : GetLedgeMove(OldLocation, Delta, OldFloor);
       if (!NewDelta.IsZero()) {
         // first revert this move
         RevertMove(OldLocation, OldBase, PreviousBaseLocation, OldFloor, false);
@@ -783,14 +782,14 @@ bool UExtendedCharacterMovementComponent::CanAttemptJump() const {
   return Super::CanAttemptJump() || IsWallRunning() || IsCustomMovementMode(CMOVE_Sliding);
 }
 
-bool UExtendedCharacterMovementComponent::DoJump(bool bReplayingMoves) {
+bool UExtendedCharacterMovementComponent::DoJump(bool bReplayingMoves, float DeltaTime) {
   bool bIsWallRunning = IsWallRunning(); // IMPORTANT: DoJump will make this always false
   bool bIsSliding = IsCustomMovementMode(CMOVE_Sliding);
 
   if (bIsSliding)
     UE_LOG(LogTemp, Display, TEXT("Jump while sliding"));
 
-  if (Super::DoJump(bReplayingMoves)) {
+  if (Super::DoJump(bReplayingMoves, DeltaTime)) {
     if (bIsWallRunning) {
       bIsWallRunJumpingAway = true;
       Velocity += CurrentWallRunInfo.Normal * WallRunJumpAwayVelocity;

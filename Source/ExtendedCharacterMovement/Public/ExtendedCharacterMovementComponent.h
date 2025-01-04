@@ -253,7 +253,7 @@ public:
   float GetMaxAcceleration() const override;
   float GetMaxBrakingDeceleration() const override;
   bool CanAttemptJump() const override;
-  bool DoJump(bool bReplayingMoves) override;
+  bool DoJump(bool bReplayingMoves, float DeltaTime) override;
 
 #pragma endregion
 
